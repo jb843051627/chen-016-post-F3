@@ -97,18 +97,43 @@ CREATE TABLE IF NOT EXISTS t_post_quality_rule (
 CREATE TABLE IF NOT EXISTS t_post_rectify_card (
   id bigint NOT NULL COMMENT '主键',
   biz_no varchar(64) DEFAULT NULL COMMENT '责令整改事务卡号',
-  stage int DEFAULT NULL COMMENT '当前段次 0..3（下达/整改中/复查/销案）',
-  status int DEFAULT NULL COMMENT '卡的落点 0未起 1在办 2已销案',
-  content varchar(255) DEFAULT NULL COMMENT '整改记事',
-  last_action varchar(64) DEFAULT NULL COMMENT '最近一次过口动作',
-  del_flag int DEFAULT '0' COMMENT '删除标记 0正常 1删除',
+  outlet_no varchar(64) DEFAULT NULL COMMENT '网点字号（同网点在办唯一）',
+  punish_bill_no varchar(64) DEFAULT NULL COMMENT '下达段：核签单上钉过的号',
+  outlet_addr varchar(255) DEFAULT NULL COMMENT '下达段：网点地址',
+  rectify_deadline datetime DEFAULT NULL COMMENT '下达段：责令改正期限止点',
+  stage int DEFAULT NULL COMMENT '屏显段次 0..3（下达/整改中/复查/销案），权威值以履历推算为准',
+  status int DEFAULT NULL COMMENT '卡的落点 1在办 2已销案 3已打住',
+  close_receipt_no varchar(64) DEFAULT NULL COMMENT '销案段：备案名录落账回执号',
+  del_flag int DEFAULT '0' COMMENT '删除标记 0正常 1删除（无删除把手，列仅随基线保留）',
   create_by varchar(64) DEFAULT NULL COMMENT '创建者',
   create_time datetime DEFAULT NULL COMMENT '创建时间',
   update_by varchar(64) DEFAULT NULL COMMENT '更新者',
   update_time datetime DEFAULT NULL COMMENT '更新时间',
   remark varchar(500) DEFAULT NULL COMMENT '备注',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_outlet_status (outlet_no, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='责令整改事务卡';
+
+-- 整改履历：一卡四段、同段分层；只追加、不涂改、不删除。
+-- 回退压下的旧层原样保留，当前视图每段只取最大 layer_no 一层，旧层不与新层同屏并列。
+CREATE TABLE IF NOT EXISTS t_post_rectify_stage (
+  id bigint NOT NULL COMMENT '主键',
+  card_id bigint NOT NULL COMMENT '所属整改事务卡',
+  stage_no int NOT NULL COMMENT '段次 0..3（下达/整改中/复查/销案）',
+  layer_no int NOT NULL COMMENT '本段内第几层 0起，收回重来只增不改',
+  action varchar(16) NOT NULL COMMENT '过口名目 ISSUE起卡 ENTER过段 BACK收回 HALT打住',
+  entry_note varchar(500) DEFAULT NULL COMMENT '当段落账记事（一处只落一遍）',
+  finish_at datetime DEFAULT NULL COMMENT '整改中段：企业报来的改完之日',
+  overdue int DEFAULT '0' COMMENT '复查段：期限过了仍未报完成 0否 1当场点出',
+  action_time datetime DEFAULT NULL COMMENT '过口时刻',
+  create_by varchar(64) DEFAULT NULL COMMENT '创建者',
+  create_time datetime DEFAULT NULL COMMENT '创建时间',
+  update_by varchar(64) DEFAULT NULL COMMENT '更新者',
+  update_time datetime DEFAULT NULL COMMENT '更新时间',
+  remark varchar(500) DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_card_stage_layer (card_id, stage_no, layer_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='整改事务卡段履历';
 
 CREATE TABLE IF NOT EXISTS t_post_report_row (
   id bigint NOT NULL COMMENT '主键',

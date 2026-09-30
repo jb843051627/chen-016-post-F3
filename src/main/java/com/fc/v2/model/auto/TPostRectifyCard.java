@@ -13,6 +13,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 责令整改事务卡对象 t_post_rectify_card
@@ -36,25 +37,41 @@ public class TPostRectifyCard implements Serializable {
     @ApiModelProperty(value = "责令整改事务卡号")
     private String bizNo;
 
-    /** 当前段次 0..3（下达/整改中/复查/销案） */
+    /** 网点字号（同网点在办唯一） */
+    @TableField("outlet_no")
+    @ApiModelProperty(value = "网点字号（同网点在办唯一）")
+    private String outletNo;
+
+    /** 下达段：核签单上钉过的号 */
+    @TableField("punish_bill_no")
+    @ApiModelProperty(value = "下达段：核签单上钉过的号")
+    private String punishBillNo;
+
+    /** 下达段：网点地址 */
+    @TableField("outlet_addr")
+    @ApiModelProperty(value = "下达段：网点地址")
+    private String outletAddr;
+
+    /** 下达段：责令改正期限止点 */
+    @TableField("rectify_deadline")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @ApiModelProperty(value = "下达段：责令改正期限止点")
+    private Date rectifyDeadline;
+
+    /** 屏显段次 0..3（下达/整改中/复查/销案），权威值以履历推算为准 */
     @TableField("stage")
-    @ApiModelProperty(value = "当前段次 0..3（下达/整改中/复查/销案）")
+    @ApiModelProperty(value = "屏显段次 0..3（下达/整改中/复查/销案），权威值以履历推算为准")
     private Integer stage;
 
-    /** 卡的落点 0未起 1在办 2已销案 */
+    /** 卡的落点 1在办 2已销案 3已打住 */
     @TableField("status")
-    @ApiModelProperty(value = "卡的落点 0未起 1在办 2已销案")
+    @ApiModelProperty(value = "卡的落点 1在办 2已销案 3已打住")
     private Integer status;
 
-    /** 整改记事 */
-    @TableField("content")
-    @ApiModelProperty(value = "整改记事")
-    private String content;
-
-    /** 最近一次过口动作 */
-    @TableField("last_action")
-    @ApiModelProperty(value = "最近一次过口动作")
-    private String lastAction;
+    /** 销案段：备案名录落账回执号 */
+    @TableField("close_receipt_no")
+    @ApiModelProperty(value = "销案段：备案名录落账回执号")
+    private String closeReceiptNo;
 
     /** 删除标记 0正常 1删除 */
     @TableField("del_flag")
@@ -88,6 +105,11 @@ public class TPostRectifyCard implements Serializable {
     @ApiModelProperty(value = "备注")
     private String remark;
 
+    /** 整改履历（非表列）：段段追加，当前段由其推算 */
+    @TableField(exist = false)
+    @ApiModelProperty(value = "整改履历")
+    private List<TPostRectifyStage> stages;
+
     public Long getId() {
         return id;
     }
@@ -102,6 +124,38 @@ public class TPostRectifyCard implements Serializable {
 
     public void setBizNo(String bizNo) {
         this.bizNo = bizNo;
+    }
+
+    public String getOutletNo() {
+        return outletNo;
+    }
+
+    public void setOutletNo(String outletNo) {
+        this.outletNo = outletNo;
+    }
+
+    public String getPunishBillNo() {
+        return punishBillNo;
+    }
+
+    public void setPunishBillNo(String punishBillNo) {
+        this.punishBillNo = punishBillNo;
+    }
+
+    public String getOutletAddr() {
+        return outletAddr;
+    }
+
+    public void setOutletAddr(String outletAddr) {
+        this.outletAddr = outletAddr;
+    }
+
+    public Date getRectifyDeadline() {
+        return rectifyDeadline;
+    }
+
+    public void setRectifyDeadline(Date rectifyDeadline) {
+        this.rectifyDeadline = rectifyDeadline;
     }
 
     public Integer getStage() {
@@ -120,20 +174,12 @@ public class TPostRectifyCard implements Serializable {
         this.status = status;
     }
 
-    public String getContent() {
-        return content;
+    public String getCloseReceiptNo() {
+        return closeReceiptNo;
     }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getLastAction() {
-        return lastAction;
-    }
-
-    public void setLastAction(String lastAction) {
-        this.lastAction = lastAction;
+    public void setCloseReceiptNo(String closeReceiptNo) {
+        this.closeReceiptNo = closeReceiptNo;
     }
 
     public Integer getDelFlag() {
@@ -182,5 +228,13 @@ public class TPostRectifyCard implements Serializable {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public List<TPostRectifyStage> getStages() {
+        return stages;
+    }
+
+    public void setStages(List<TPostRectifyStage> stages) {
+        this.stages = stages;
     }
 }
