@@ -36,17 +36,43 @@ public class TPostRectifyCard implements Serializable {
     @ApiModelProperty(value = "责令整改事务卡号")
     private String bizNo;
 
-    /** 当前段次 0..3（下达/整改中/复查/销案） */
+    /** 网点号（一家网点同时只容一张在办的卡） */
+    @TableField("outlet_no")
+    @ApiModelProperty(value = "网点号")
+    private String outletNo;
+
+    /** 网点地址（下达段写入） */
+    @TableField("outlet_addr")
+    @ApiModelProperty(value = "网点地址")
+    private String outletAddr;
+
+    /** 核签单上钉过的号（查处核签单号，下达段写入） */
+    @TableField("source_bill_no")
+    @ApiModelProperty(value = "核签单上钉过的号")
+    private String sourceBillNo;
+
+    /** 责令改正期限（下达段写入） */
+    @TableField("correct_deadline")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @ApiModelProperty(value = "责令改正期限")
+    private Date correctDeadline;
+
+    /** 现场点验结果（复查段写入） */
+    @TableField("review_result")
+    @ApiModelProperty(value = "现场点验结果")
+    private String reviewResult;
+
+    /** 当前段次镜像 0..3（下达/整改中/复查/销案）；不作数，以履历行数推算为准 */
     @TableField("stage")
-    @ApiModelProperty(value = "当前段次 0..3（下达/整改中/复查/销案）")
+    @ApiModelProperty(value = "当前段次镜像，以履历推算为准")
     private Integer stage;
 
-    /** 卡的落点 0未起 1在办 2已销案 */
+    /** 卡的落点 0未起 1在办 2已销案 3已打住 */
     @TableField("status")
-    @ApiModelProperty(value = "卡的落点 0未起 1在办 2已销案")
+    @ApiModelProperty(value = "卡的落点 0未起 1在办 2已销案 3已打住")
     private Integer status;
 
-    /** 整改记事 */
+    /** 整改记事（整改中段企业报送，镜像履历当层内容） */
     @TableField("content")
     @ApiModelProperty(value = "整改记事")
     private String content;
@@ -102,6 +128,46 @@ public class TPostRectifyCard implements Serializable {
 
     public void setBizNo(String bizNo) {
         this.bizNo = bizNo;
+    }
+
+    public String getOutletNo() {
+        return outletNo;
+    }
+
+    public void setOutletNo(String outletNo) {
+        this.outletNo = outletNo;
+    }
+
+    public String getOutletAddr() {
+        return outletAddr;
+    }
+
+    public void setOutletAddr(String outletAddr) {
+        this.outletAddr = outletAddr;
+    }
+
+    public String getSourceBillNo() {
+        return sourceBillNo;
+    }
+
+    public void setSourceBillNo(String sourceBillNo) {
+        this.sourceBillNo = sourceBillNo;
+    }
+
+    public Date getCorrectDeadline() {
+        return correctDeadline;
+    }
+
+    public void setCorrectDeadline(Date correctDeadline) {
+        this.correctDeadline = correctDeadline;
+    }
+
+    public String getReviewResult() {
+        return reviewResult;
+    }
+
+    public void setReviewResult(String reviewResult) {
+        this.reviewResult = reviewResult;
     }
 
     public Integer getStage() {

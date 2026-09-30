@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS t_post_outlet_card (
   fine_amt decimal(12,2) DEFAULT NULL COMMENT '本卡报备营业面积(平方米)',
   content varchar(255) DEFAULT NULL COMMENT '核验串（随版本序走）',
   grade_level int DEFAULT NULL COMMENT '日均件量折到的服务序位',
+  rectify_receipt varchar(64) DEFAULT NULL COMMENT '整改销案时落到本行的备案名录回执号',
   status int DEFAULT NULL COMMENT '进展 0待核对 1已核对 2已冻住',
   del_flag int DEFAULT '0' COMMENT '删除标记 0正常 1删除',
   create_by varchar(64) DEFAULT NULL COMMENT '创建者',
@@ -97,18 +98,48 @@ CREATE TABLE IF NOT EXISTS t_post_quality_rule (
 CREATE TABLE IF NOT EXISTS t_post_rectify_card (
   id bigint NOT NULL COMMENT '主键',
   biz_no varchar(64) DEFAULT NULL COMMENT '责令整改事务卡号',
-  stage int DEFAULT NULL COMMENT '当前段次 0..3（下达/整改中/复查/销案）',
-  status int DEFAULT NULL COMMENT '卡的落点 0未起 1在办 2已销案',
-  content varchar(255) DEFAULT NULL COMMENT '整改记事',
+  outlet_no varchar(64) DEFAULT NULL COMMENT '网点号（一家网点同时只容一张在办的卡）',
+  outlet_addr varchar(255) DEFAULT NULL COMMENT '网点地址（下达段写入）',
+  source_bill_no varchar(64) DEFAULT NULL COMMENT '核签单上钉过的号（查处核签单号，下达段写入）',
+  correct_deadline datetime DEFAULT NULL COMMENT '责令改正期限（下达段写入）',
+  review_result varchar(255) DEFAULT NULL COMMENT '现场点验结果（复查段写入）',
+  stage int DEFAULT NULL COMMENT '当前段次镜像，0..3（下达/整改中/复查/销案）；不作数，以履历行数推算为准',
+  status int DEFAULT NULL COMMENT '卡的落点 0未起 1在办 2已销案 3已打住',
+  content varchar(255) DEFAULT NULL COMMENT '整改记事（整改中段企业报送，镜像履历当层内容）',
   last_action varchar(64) DEFAULT NULL COMMENT '最近一次过口动作',
-  del_flag int DEFAULT '0' COMMENT '删除标记 0正常 1删除',
+  del_flag int DEFAULT '0' COMMENT '删除标记 0正常 1删除（已销案/已打住的卡不允许删除）',
   create_by varchar(64) DEFAULT NULL COMMENT '创建者',
   create_time datetime DEFAULT NULL COMMENT '创建时间',
   update_by varchar(64) DEFAULT NULL COMMENT '更新者',
   update_time datetime DEFAULT NULL COMMENT '更新时间',
   remark varchar(500) DEFAULT NULL COMMENT '备注',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_rectify_biz_no (biz_no),
+  KEY idx_rectify_outlet (outlet_no, status, del_flag)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='责令整改事务卡';
+
+-- 整改履历：一段一层，同段只认第一遍；回退重来时旧层压底（buried=1，内容原样留档），
+-- 与新层不许同屏并列：每卡每段至多一层在屏（active_slot=0），DB 唯一索引兜底。
+CREATE TABLE IF NOT EXISTS t_post_rectify_card_record (
+  id bigint NOT NULL COMMENT '主键',
+  card_id bigint NOT NULL COMMENT '所属整改事务卡',
+  stage int NOT NULL COMMENT '段次 0下达 1整改中 2复查 3销案',
+  layer_no int NOT NULL COMMENT '本段层序，第一遍为0，回退后重来逐层加一',
+  active_slot int DEFAULT NULL COMMENT '在屏层为1，压底层为NULL；NULL不进唯一约束，故每卡每段至多一层在屏',
+  content varchar(500) DEFAULT NULL COMMENT '本层记事（该段经手人落笔的名目，压底后一字不改）',
+  operator varchar(64) DEFAULT NULL COMMENT '过口经手人',
+  action varchar(64) DEFAULT NULL COMMENT '过口动作 enter/terminate/close',
+  buried int NOT NULL DEFAULT 0 COMMENT '是否已被回退压底 0否 1是',
+  del_flag int DEFAULT '0' COMMENT '删除标记 0正常 1删除（履历一律不删）',
+  create_by varchar(64) DEFAULT NULL COMMENT '创建者',
+  create_time datetime DEFAULT NULL COMMENT '创建时间（过口当日时刻）',
+  update_by varchar(64) DEFAULT NULL COMMENT '更新者',
+  update_time datetime DEFAULT NULL COMMENT '更新时间',
+  remark varchar(500) DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_rectify_record_active (card_id, stage, active_slot),
+  KEY idx_rectify_record_card (card_id, stage, layer_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='责令整改事务卡整改履历（一段一层，压底不并列）';
 
 CREATE TABLE IF NOT EXISTS t_post_report_row (
   id bigint NOT NULL COMMENT '主键',

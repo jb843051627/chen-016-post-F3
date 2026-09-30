@@ -72,6 +72,11 @@ public class TPostOutletCard implements Serializable {
     @ApiModelProperty(value = "日均件量折到的服务序位")
     private Integer gradeLevel;
 
+    /** 整改销案时落到本行的备案名录回执号 */
+    @TableField("rectify_receipt")
+    @ApiModelProperty(value = "整改销案时落到本行的备案名录回执号")
+    private String rectifyReceipt;
+
     /** 进展 0待核对 1已核对 2已冻住 */
     @TableField("status")
     @ApiModelProperty(value = "进展 0待核对 1已核对 2已冻住")
@@ -179,6 +184,14 @@ public class TPostOutletCard implements Serializable {
 
     public void setGradeLevel(Integer gradeLevel) {
         this.gradeLevel = gradeLevel;
+    }
+
+    public String getRectifyReceipt() {
+        return rectifyReceipt;
+    }
+
+    public void setRectifyReceipt(String rectifyReceipt) {
+        this.rectifyReceipt = rectifyReceipt;
     }
 
     public Integer getStatus() {
